@@ -5,45 +5,34 @@
 #include <string.h>
 #include <assert.h>
 
+
+#include "bread_placer.h"
+
+// TODO(erick): Error codes.
+
+//
+// Globals
+//
+static const char* prj_extension = ".icprj";
+static const char* ics_extension = ".ics_list";
+
+//
+// Macros
+//
 #define sizeof_array(array) (sizeof(array)/sizeof(array[0]))
 
-typedef intptr_t isize;
-typedef int8_t   int8;
-typedef int16_t  int16;
-typedef int32_t  int32;
-typedef int64_t  int64;
+void report_ic_error(IC* ic) {
+    fprintf(stderr, "*Error on IC*\n");
+    fprintf(stderr, "\t # pins: %d\n", ic->n_pins);
 
-typedef size_t       usize;
-typedef uint8_t      uint8;
-typedef uint16_t     uint16;
-typedef uint32_t     uint32;
-typedef uint64_t     uint64;
-typedef unsigned int uint;
+    if(ic->name) {
+        fprintf(stderr, "\t Name: %s\n", ic->name);
+    }
 
-typedef enum {
-    NON_SPECIAL,
-    VCC,
-    GND,
-    NOT_CONNECTED,
-} PinType;
-
-typedef struct {
-    PinType type;
-    char* label;
-} Pin;
-
-typedef struct {
-    uint n_pins;
-    char* name;
-    char* code;
-    Pin* pins;
-} IC;
-
-typedef struct {
-    IC* data;
-    usize count;
-    usize capacity;
-} ICList;
+    if(ic->code) {
+        fprintf(stderr, "\t Code: %s\n", ic->code);
+    }
+}
 
 ICList new_ICList() {
     ICList result;
@@ -76,19 +65,6 @@ char* string_after_first_space(char* string) {
     if(*result == ' ') { result++; }
 
     return result;
-}
-
-void report_ic_error(IC* ic) {
-    fprintf(stderr, "*Error on IC*\n");
-    fprintf(stderr, "\t # pins: %d\n", ic->n_pins);
-
-    if(ic->name) {
-        fprintf(stderr, "\t Name: %s\n", ic->name);
-    }
-
-    if(ic->code) {
-        fprintf(stderr, "\t Code: %s\n", ic->code);
-    }
 }
 
 void validate_ic(IC ic) {
@@ -165,18 +141,10 @@ void assign_pin(IC* ic, uint pin_number, char* label) {
     ic->pins[index] = current_pin;
 }
 
-int main(int args_count, char** args_values) {
-    FILE* input_file = stdin;
-    if(args_count > 1) {
-        input_file = fopen(args_values[1], "r");
-        if(!input_file) {
-            fprintf(stderr, "Could not open file: [%s].\n", args_values[1]);
-            exit(1);
-        }
-    }
-
+ICList parse_ic_list_file(FILE* input_file) {
     ICList ic_list = new_ICList();
 
+    // FIXME(erick): This should not be fixed.
     char __line[256];
     bool is_reading_ic = false;
     bool is_reading_pins = false;
@@ -249,6 +217,164 @@ int main(int args_count, char** args_values) {
         validate_ic(current_ic);
         add_to_ic_list(&ic_list, current_ic);
     }
+
+    return ic_list;
+}
+
+void save_project_file(char* project_filename, ICList* breadboard) {
+    FILE* prj_file = fopen(project_filename, "w");
+    if(!prj_file) {
+        fprintf(stderr, "Could not open project file [%s] to write the project data.\n",
+               project_filename);
+        exit(4);
+    }
+
+    for(uint ic_index = 0; ic_index < breadboard->count; ic_index++) {
+        IC* ic = breadboard->data + ic_index;
+        BreadboardLocation location = ic->location;
+
+        fprintf(prj_file, "%d: {%d, %d, %d}\n", ic_index, location.column,
+                location.row, location.orientation);
+    }
+
+    fclose(prj_file);
+}
+
+void read_project_file(char* project_filename, ICList* breadboard) {
+    FILE* prj_file = fopen(project_filename, "r");
+    if(!prj_file) {
+        fprintf(stderr, "Could not open project file [%s] to read the project data.\n",
+               project_filename);
+        exit(4);
+    }
+
+    // FIXME(erick): This should not be fixed.
+    uint line_number = 0;
+    char __line[256];
+    while(!feof(prj_file) && fgets(__line, sizeof_array(__line), prj_file)) {
+        char* line = __line;
+        trim_end(line);
+        line_number++;
+
+        uint ic_index;
+        uint column;
+        uint row;
+        uint orientation;
+
+        int read = sscanf(line, "%d: {%d, %d, %d}", &ic_index, &column,
+                          &row, &orientation);
+        if(read != 4) {
+            fprintf(stderr, "Invalid line in project file. Ignoring.\n\t%d: %s\n",
+                    line_number, line);
+            continue;
+        }
+
+        if(ic_index >= breadboard->count) {
+            fprintf(stderr, "Invalid IC index [%d] at line (%d) of project file.\n",
+                    ic_index, line_number);
+            exit(4);
+        }
+
+        IC* ic = breadboard->data + ic_index;
+        BreadboardLocation* location = &ic->location;
+
+        location->column = column;
+        location->row = row;
+        location->orientation = orientation;
+    }
+
+    fclose(prj_file);
+}
+
+char* extension(char* filename) {
+    char* result = filename + strlen(filename) - 1;
+
+    while(result != filename) {
+        if(*result == '.') { break; }
+
+        result--;
+    }
+
+    return result;
+}
+
+char* str_n_alloc_cpy(char* str, usize len) {
+    char* result = (char*) malloc(len + 1);
+    strncpy(result, str, len);
+    result[len] = '\0';
+
+    return result;
+}
+
+int main(int args_count, char** args_values) {
+    if(args_count != 2) {
+        fprintf(stderr, "Usage: %s (ics__list_file | prj_file)\n", args_values[0]);
+        exit(1);
+    }
+
+    char* project_name;
+    char* ics_list_filename;
+    char* project_filename;
+
+    char* input_filename = args_values[1];
+    char* input_extension = extension(input_filename);
+    usize input_extension_len = strlen(input_extension);
+
+    bool should_read_prj_file;
+
+    if(input_extension == input_filename) {
+        fprintf(stderr, "The input file must have an extension\n");
+        exit(2);
+    }
+
+    project_name = str_n_alloc_cpy(input_filename,
+                                   strlen(input_filename) -
+                                   input_extension_len);
+    usize project_name_len = strlen(project_name);
+
+    // NOTE(erick): A project file was passed.
+    if(strcmp(input_extension, prj_extension) == 0) {
+        project_filename = input_filename;
+        should_read_prj_file = true;
+
+        usize ics_extension_len = strlen(ics_extension);
+        ics_list_filename = (char*) malloc(project_name_len +
+                                           ics_extension_len + 1);
+
+        strcpy(ics_list_filename, project_name);
+        strcat(ics_list_filename, ics_extension);
+
+    // NOTE(erick): A ics_list file was passed.
+    } else if(strcmp(input_extension, ics_extension) == 0) {
+        ics_list_filename = input_filename;
+        should_read_prj_file = false;
+
+        usize prj_extension_len = strlen(prj_extension);
+        project_filename = (char*) malloc(prj_extension_len +
+                                                project_name_len + 1);
+
+        strcpy(project_filename, project_name);
+        strcat(project_filename, prj_extension);
+    } else {
+        fprintf(stderr, "You must pass either a project file or a ics_list file\n");
+        exit(2);
+    }
+
+    FILE* ics_list_file = fopen(ics_list_filename, "r");
+    if(!ics_list_file) {
+        fprintf(stderr, "Could not open ics_list file [%s] to read the ics data.\n",
+                ics_list_filename);
+        exit(3);
+    }
+
+    ICList ic_list = parse_ic_list_file(ics_list_file);
+    fclose(ics_list_file);
+
+    if(should_read_prj_file) {
+        read_project_file(project_filename, &ic_list);
+    }
+
+    save_project_file(project_filename, &ic_list);
 
     return 0;
 }
