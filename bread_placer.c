@@ -10,6 +10,8 @@
 
 // TODO(erick): Error codes.
 
+#define PAN_INCREMENT 10
+
 //
 // Globals
 //
@@ -306,6 +308,11 @@ char* str_n_alloc_cpy(char* str, usize len) {
     return result;
 }
 
+void move_point(Vec2* point, int32 dx, int32 dy) {
+    point->x += dx;
+    point->y += dy;
+}
+
 int main(int args_count, char** args_values) {
     if(args_count != 2) {
         fprintf(stderr, "Usage: %s (ics__list_file | prj_file)\n", args_values[0]);
@@ -393,6 +400,21 @@ int main(int args_count, char** args_values) {
                 switch (e.key.keysym.sym) {
                 case SDLK_q:
                     is_running = false;
+                    break;
+                case SDLK_z:
+                    dd.zoomed_in = !dd.zoomed_in;
+                    break;
+                case SDLK_w:
+                    move_point(&dd.zoom_origin, 0, -1 * PAN_INCREMENT);
+                    break;
+                case SDLK_s:
+                    move_point(&dd.zoom_origin, 0, 1 * PAN_INCREMENT);
+                    break;
+                case SDLK_a:
+                    move_point(&dd.zoom_origin, -1 * PAN_INCREMENT, 0);
+                    break;
+                case SDLK_d:
+                    move_point(&dd.zoom_origin, 1 * PAN_INCREMENT, 0);
                     break;
                 default:
                     printf("Key pressed: %d\n", e.key.keysym.sym);

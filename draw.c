@@ -194,13 +194,43 @@ void draw_breadboard(DrawData* data) {
     draw_text(data->renderer, data->clear_sans, data->white_color, buffer, 0, 0);
 
     SDL_Rect dest_rect;
-    dest_rect.h = data->height;
-    dest_rect.w = width_preserve_ratio(data->height);
-    dest_rect.y = 0;
-    dest_rect.x = (data->width - dest_rect.w) / 2;
+    SDL_Rect origin_rect;
+    SDL_Rect* dest = NULL;
+    SDL_Rect* origin = NULL;
+    if(!data->zoomed_in) {
+        dest_rect.h = data->height;
+        dest_rect.w = width_preserve_ratio(data->height);
+        dest_rect.y = 0;
+        dest_rect.x = (data->width - dest_rect.w) / 2;
+        dest = &dest_rect;
+    } else {
+        Vec2* zoom_origin = &data->zoom_origin;
+        origin_rect.x = zoom_origin->x;
+        origin_rect.y = zoom_origin->y;
+        origin_rect.h = data->height;
+        origin_rect.w = data->width;
+
+        if(origin_rect.x < 0) {
+            zoom_origin->x = origin_rect.x = 0;
+        }
+
+        if(origin_rect.y < 0) {
+            zoom_origin->y = origin_rect.y = 0;
+        }
+
+        if(origin_rect.x + origin_rect.w >= CANVAS_WIDTH) {
+            zoom_origin->x = origin_rect.x = CANVAS_WIDTH - origin_rect.w;
+        }
+
+        if(origin_rect.y + origin_rect.h >= CANVAS_HEIGHT) {
+            zoom_origin->y = origin_rect.y = CANVAS_HEIGHT - origin_rect.h;
+        }
+
+        origin = &origin_rect;
+    }
 
     SDL_RenderCopyEx(data->renderer, data->canvas,
-                     NULL, &dest_rect, 0, NULL, SDL_FLIP_NONE);
+                     origin, dest, 0, NULL, SDL_FLIP_NONE);
 
     // int SDL_RenderCopyEx(SDL_Renderer*          renderer,
     //                  SDL_Texture*           texture,
@@ -222,7 +252,6 @@ void save_image(DrawData* data) {
 
 // NOTE(erick): Copy-pasta from here:
 // https://stackoverflow.com/questions/34255820/save-sdl-texture-to-file
-
 static void save_texture(SDL_Renderer* renderer,
                          SDL_Texture* texture,
                          const char* filename) {

@@ -26,6 +26,10 @@ typedef unsigned int uint;
 #define width_preserve_ratio(h) ((h * CANVAS_WIDTH) / CANVAS_HEIGHT)
 
 
+typedef struct {
+    int32 x, y;
+} Vec2;
+
 // TODO(erick): Abstract the font data to another struct
 typedef struct {
     SDL_Window* window;
@@ -38,6 +42,9 @@ typedef struct {
 
     int width;
     int height;
+
+    bool zoomed_in;
+    Vec2 zoom_origin;
 
     float dt;
 } DrawData;
