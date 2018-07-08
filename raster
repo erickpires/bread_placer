@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    exit
+fi
+
+input_file=$1
+base=$(basename "$input_file" .bmp)
+output_file=${base}.svg
+
+potrace -s -o "$output_file" "$input_file"

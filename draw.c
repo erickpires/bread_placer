@@ -247,7 +247,16 @@ void swap_buffers(DrawData* data) {
 }
 
 void save_image(DrawData* data) {
-    save_texture(data->renderer, data->canvas, "output.bmp");
+    char* output_filename = "output.bmp";
+    char* raster_script = "./raster ";
+    char* raster_command = (char*) malloc(strlen(output_filename) +
+                                          strlen(raster_script) + 1);
+    strcpy(raster_command, raster_script);
+    strcat(raster_command, output_filename);
+
+    save_texture(data->renderer, data->canvas, output_filename);
+
+    system(raster_command);
 }
 
 // NOTE(erick): Copy-pasta from here:
