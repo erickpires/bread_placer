@@ -1,0 +1,83 @@
+IC 16
+Code 74LS173
+Name RE1
+Pins
+#1 SaiRE\
+#2 GND(N)
+#3 VEB0
+#4 VEB1
+#5 VEB2
+#6 VEB3
+#7 Rlg2
+#8 GND
+#9 GND(G1\)
+#10 GND(G2\)
+#11 SM3
+#12 SM2
+#13 SM1
+#14 SM0
+#15 GND(CLR)
+#16 VCC
+
+IC 16
+Code 74LS173
+Name RE2
+Pins
+#1 SaiRE\
+#2 GND(N)
+#3 VEB4
+#4 VEB5
+#5 VEB6
+#6 VEB7
+#7 Rlg2
+#8 GND
+#9 GND(G1\)
+#10 GND(G2\)
+#14 SM4
+#13 SM5
+#12 SM6
+#11 SM7
+#15 GND(CLR)
+#16 VCC
+
+IC 16
+Code 74LS173
+Name RE3
+Pins
+#1 SaiRE\
+#2 GND(N)
+#3 VEB8
+#4 VEB9
+#5 VEB10
+#6 VEB11
+#7 Rlg2
+#8 GND
+#9 GND(G1\)
+#10 GND(G2\)
+#14 SM8
+#13 SM9
+#12 SM10
+#11 SM11
+#15 GND(CLR)
+#16 VCC
+
+IC 16
+Code 74LS173
+Name RE4
+Pins
+#1 SaiRE\
+#2 GND(N)
+#3 VEB12
+#4 VEB13
+#5 VEB14
+#6 VEB15
+#7 Rlg2
+#8 GND
+#9 GND(G1\)
+#10 GND(G2\)
+#14 SM12
+#13 SM13
+#12 SM14
+#11 SM15
+#15 GND(CLR)
+#16 VCC

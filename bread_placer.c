@@ -5,8 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
-
 #include "bread_placer.h"
+#include "draw.h"
 
 // TODO(erick): Error codes.
 
@@ -372,6 +372,36 @@ int main(int args_count, char** args_values) {
 
     if(should_read_prj_file) {
         read_project_file(project_filename, &ic_list);
+    }
+
+    DrawData dd = init_SDL();
+    bool is_running = true;
+
+    uint32 old_ticks = SDL_GetTicks();
+    while(is_running) {
+        uint32 new_ticks = SDL_GetTicks();
+        uint32 delta_ticks = new_ticks - old_ticks;
+        old_ticks = new_ticks;
+        dd.dt = (float) delta_ticks / 1000.0;
+
+        SDL_Event e;
+        while(SDL_PollEvent(&e)) {
+            if(e.type == SDL_QUIT) {
+                is_running = false;
+
+            } else if(e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                case SDLK_q:
+                    is_running = false;
+                    break;
+                default:
+                    printf("Key pressed: %d\n", e.key.keysym.sym);
+                }
+            }
+        }
+
+        draw_breadboard(&dd);
+        swap_buffers(&dd);
     }
 
     save_project_file(project_filename, &ic_list);

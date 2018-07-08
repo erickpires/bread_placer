@@ -1,7 +1,6 @@
 #ifndef BREAD_PLACER_H
 #define BREAD_PLACER_H 1
 
-
 typedef intptr_t isize;
 typedef int8_t   int8;
 typedef int16_t  int16;
