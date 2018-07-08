@@ -404,6 +404,7 @@ int main(int args_count, char** args_values) {
         swap_buffers(&dd);
     }
 
+    save_image(&dd);
     save_project_file(project_filename, &ic_list);
 
     return 0;

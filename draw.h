@@ -48,4 +48,6 @@ DrawData init_SDL();
 void draw_breadboard(DrawData*);
 void swap_buffers(DrawData*);
 
+void save_image(DrawData*);
+
 #endif

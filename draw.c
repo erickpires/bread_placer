@@ -10,6 +10,8 @@
 
 #include "draw.h"
 
+static void save_texture(SDL_Renderer*, SDL_Texture*, const char *);
+
 DrawData init_SDL() {
     DrawData result;
 
@@ -37,7 +39,7 @@ DrawData init_SDL() {
     result.renderer = SDL_CreateRenderer(result.window, -1,
                                          SDL_RENDERER_ACCELERATED |
                                          SDL_RENDERER_TARGETTEXTURE);
-    result.canvas = SDL_CreateTexture(result.renderer, SDL_PIXELFORMAT_RGBA8888,
+    result.canvas = SDL_CreateTexture(result.renderer, SDL_PIXELFORMAT_RGBA32,
                                       SDL_TEXTUREACCESS_TARGET,
                                       CANVAS_WIDTH, CANVAS_HEIGHT);
 
@@ -212,4 +214,66 @@ void draw_breadboard(DrawData* data) {
 
 void swap_buffers(DrawData* data) {
     SDL_RenderPresent(data->renderer);
+}
+
+void save_image(DrawData* data) {
+    save_texture(data->renderer, data->canvas, "output.bmp");
+}
+
+// NOTE(erick): Copy-pasta from here:
+// https://stackoverflow.com/questions/34255820/save-sdl-texture-to-file
+
+static void save_texture(SDL_Renderer* renderer,
+                         SDL_Texture* texture,
+                         const char* filename) {
+    uint32 format;
+    int w, h;
+
+    /* Get information about texture we want to save */
+    int result = SDL_QueryTexture(texture, &format, NULL, &w, &h);
+    if (result != 0) {
+        fprintf(stderr, "Failed querying texture: %s\n", SDL_GetError());
+        return;
+    }
+
+    int bytes_per_pixel = SDL_BYTESPERPIXEL(format);
+
+    /* Create buffer to hold texture data and load it */
+    void* pixels = malloc(w * h * bytes_per_pixel);
+    if (!pixels) {
+        fprintf(stderr, "Failed allocating memory\n");
+        return;
+    }
+
+    SDL_SetRenderTarget(renderer, texture);
+    result = SDL_RenderReadPixels(renderer, NULL, format, pixels, w * bytes_per_pixel);
+    if (result != 0) {
+        fprintf(stderr, "Failed reading pixel data: %s\n", SDL_GetError());
+        free(pixels);
+        return;
+    }
+
+    /* Copy pixel data over to surface */
+    SDL_Surface* surf = SDL_CreateRGBSurfaceWithFormatFrom(pixels, w, h,
+                                                           SDL_BITSPERPIXEL(format),
+                                                           w * bytes_per_pixel,
+                                                           format);
+    if (!surf) {
+        fprintf(stderr, "Failed creating new surface: %s\n", SDL_GetError());
+        goto cleanup;
+    }
+
+    /* Save result to an image */
+    result = SDL_SaveBMP(surf, filename);
+    if (result != 0) {
+        fprintf(stderr, "Failed saving image: %s\n", SDL_GetError());
+        goto cleanup;
+    }
+
+    fprintf(stderr, "Saved texture as BMP to \"%s\"\n", filename);
+
+cleanup:
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_FreeSurface(surf);
+    free(pixels);
 }
