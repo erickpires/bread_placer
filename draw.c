@@ -7,7 +7,6 @@
 
 #include <SDL2/SDL.h>
 
-
 #include "draw.h"
 
 static void save_texture(SDL_Renderer*, SDL_Texture*, const char *);
@@ -99,72 +98,60 @@ static void draw_horizontal_line_at(SDL_Renderer* renderer, int y) {
     SDL_RenderFillRect(renderer, &rect);
 }
 
-
-static void draw_grid(SDL_Renderer* renderer) {
-    int vertical_stride = CANVAS_HEIGHT / 63;
-
-    int current_y = vertical_stride;
+void draw_grid(DrawData* data) {
+    SDL_Renderer* renderer = data->renderer;
+    int current_y = VERTICAL_STRIDE;
     for(uint i = 1;
         i < 64;
-        i++, current_y += vertical_stride)
+        i++, current_y += VERTICAL_STRIDE)
     {
         draw_horizontal_line_at(renderer, current_y);
     }
 
-    int number_cell_width = vertical_stride;
-    int remaining_space = CANVAS_WIDTH - 4 * number_cell_width;
-    int large_cell_width = remaining_space / 9;
-
     // NOTE(erick): I'm too lazy to think in a loop for these.
-    int current_x = number_cell_width;
+    int current_x = NUMBER_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += IC_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += number_cell_width;
+    current_x += NUMBER_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += IC_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += number_cell_width;
+    current_x += NUMBER_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += IC_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 
-    current_x += large_cell_width;
+    current_x += TEXT_CELL_WIDTH;
     draw_vertical_line_at(renderer, current_x);
 }
 
 void draw_numbers(DrawData* data) {
-    int vertical_stride = CANVAS_HEIGHT / 63;
-    int number_cell_width = vertical_stride;
-
-    int remaining_space = CANVAS_WIDTH - 4 * number_cell_width;
-    int large_cell_width = remaining_space / 9;
-
-    int horizontal_stride = 3 * large_cell_width + number_cell_width;
+    int horizontal_stride = 2 * TEXT_CELL_WIDTH + TEXT_CELL_WIDTH + NUMBER_CELL_WIDTH;
 
     char buffer[4];
     int current_y = -5;
-    for(uint i = 1; i <= 64; i++, current_y += vertical_stride) {
+    for(uint i = 1; i <= 64; i++, current_y += VERTICAL_STRIDE) {
         sprintf(buffer, "%2d", i);
 
         int current_x = 5;
@@ -175,15 +162,95 @@ void draw_numbers(DrawData* data) {
     }
 }
 
-void draw_breadboard(DrawData* data) {
+static Vec2 coord_of_ic(IC* ic, Vec2* pin_one) {
+    Vec2 result;
+
+    BreadboardLocation loc = ic->location;
+
+    int first_row;
+    if(loc.orientation == UP) {
+        first_row = loc.row;
+    } else {
+        uint ic_height = ic->n_pins / 2;
+        first_row = loc.row - ic_height;
+    }
+
+    result.y = (first_row - 1) * VERTICAL_STRIDE;
+    result.x = 0;
+
+    // NOTE(erick): This is very ugly, cumbersome and spaghetti. But it's fun anyway.
+    switch(loc.column) {
+    case 3:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 2:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 1:
+        result.x += NUMBER_CELL_WIDTH + TEXT_CELL_WIDTH;
+        break;
+    default:
+        fprintf(stderr, "Invalid IC column (%d).\n", loc.column);
+        exit(5);
+    }
+
+    if(pin_one) {
+        pin_one->y = (loc.row - 1) * VERTICAL_STRIDE;
+        pin_one->x = result.x;
+        if(loc.orientation == DOWN) {
+            pin_one->y -= VERTICAL_STRIDE;
+            pin_one->x += IC_CELL_WIDTH - VERTICAL_STRIDE;
+        }
+    }
+
+    return result;
+}
+
+static Vec2 dimensions_of_ic(IC* ic) {
+    uint ic_height = ic->n_pins / 2;
+
+    Vec2 result = {.w = IC_CELL_WIDTH, .h = ic_height * VERTICAL_STRIDE};
+    return result;
+}
+
+void prepare_canvas(DrawData* data) {
     // Attach the canvas;
     SDL_SetRenderTarget(data->renderer, data->canvas);
     SDL_SetRenderDrawColor(data->renderer, 0xff, 0xff, 0xff, 0xff);
     SDL_RenderClear(data->renderer);
+}
 
-    draw_grid(data->renderer);
-    draw_numbers(data);
+void draw_ics(DrawData* data, ICList ic_list) {
+    for(usize ic_index = 0; ic_index < ic_list.count; ic_index++) {
+        IC* ic = ic_list.data + ic_index;
 
+        if(ic->location.column == 0) { continue; }
+
+        Vec2 pin_one;
+        Vec2 corner = coord_of_ic(ic, &pin_one);
+        Vec2 dimensions = dimensions_of_ic(ic);
+
+        SDL_Rect ic_outside = {.x = corner.x, .y = corner.y,
+                               .h = dimensions.h, .w = dimensions.w};
+        SDL_Rect ic_inside = {.x = ic_outside.x + 1 * LINE_WIDTH,
+                              .y = ic_outside.y + 1 * LINE_WIDTH,
+                              .h = ic_outside.h - 2 * LINE_WIDTH,
+                              .w = ic_outside.w - 2 * LINE_WIDTH};
+        SDL_Rect pin_one_rect = {.x = pin_one.x + 2 * LINE_WIDTH,
+                                 .y = pin_one.y + 2 * LINE_WIDTH,
+                                 .h = VERTICAL_STRIDE / 2,
+                                 .w = VERTICAL_STRIDE / 2};
+
+        SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
+        SDL_RenderFillRect(data->renderer, &ic_outside);
+
+        SDL_SetRenderDrawColor(data->renderer, 0xff, 0xff, 0xff, 0xff);
+        SDL_RenderFillRect(data->renderer, &ic_inside);
+
+        SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
+        SDL_RenderFillRect(data->renderer, &pin_one_rect);
+    }
+}
+
+void draw_canvas_to_framebuffer(DrawData* data) {
     // Detach the canvas;
     SDL_SetRenderTarget(data->renderer, NULL);
     SDL_SetRenderDrawColor(data->renderer, 0xff, 0x00, 0xff, 0xff);

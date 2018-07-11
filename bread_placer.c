@@ -9,6 +9,7 @@
 #include "draw.h"
 
 // TODO(erick): Error codes.
+// TODO(erick): Velocity control in zoom mode.
 
 #define PAN_INCREMENT 10
 
@@ -422,7 +423,12 @@ int main(int args_count, char** args_values) {
             }
         }
 
-        draw_breadboard(&dd);
+        prepare_canvas(&dd);
+        draw_grid(&dd);
+        draw_numbers(&dd);
+        draw_ics(&dd, ic_list);
+
+        draw_canvas_to_framebuffer(&dd);
         swap_buffers(&dd);
     }
 
