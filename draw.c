@@ -9,6 +9,11 @@
 
 #include "draw.h"
 
+typedef enum {
+    LEFT,
+    RIGHT
+} ColumnSide;
+
 static void save_texture(SDL_Renderer*, SDL_Texture*, const char *);
 
 DrawData init_SDL() {
@@ -162,18 +167,50 @@ void draw_numbers(DrawData* data) {
     }
 }
 
+static Vec2 text_cell_coord(uint row, uint column, ColumnSide side) {
+    Vec2 result;
+
+    result.y = (row - 1) * VERTICAL_STRIDE;
+    result.x = 0;
+
+    // NOTE(erick): This is very ugly, cumbersome and spaghetti. But it's fun anyway.
+    switch(column) {
+    case 3:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 2:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 1:
+        result.x += NUMBER_CELL_WIDTH;
+        break;
+    default:
+        fprintf(stderr, "Invalid IC column (%d).\n", column);
+        exit(5);
+    }
+
+    if(side == RIGHT) {
+        result.x += TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    }
+
+    return result;
+}
+
+static uint first_ic_row(IC* ic) {
+    BreadboardLocation loc = ic->location;
+
+    if(loc.orientation == UP) {
+        return loc.row;
+    } else {
+        uint ic_height = ic->n_pins / 2;
+        return loc.row - ic_height;
+    }
+}
+
 static Vec2 coord_of_ic(IC* ic, Vec2* pin_one) {
     Vec2 result;
 
     BreadboardLocation loc = ic->location;
 
-    int first_row;
-    if(loc.orientation == UP) {
-        first_row = loc.row;
-    } else {
-        uint ic_height = ic->n_pins / 2;
-        first_row = loc.row - ic_height;
-    }
+    int first_row = first_ic_row(ic);
 
     result.y = (first_row - 1) * VERTICAL_STRIDE;
     result.x = 0;
@@ -209,6 +246,16 @@ static Vec2 dimensions_of_ic(IC* ic) {
 
     Vec2 result = {.w = IC_CELL_WIDTH, .h = ic_height * VERTICAL_STRIDE};
     return result;
+}
+
+static uint pin_number_no_rotation(IC* ic, uint pin) {
+    if(ic->location.orientation == UP) { return pin; }
+
+    if(pin <= ic->n_pins / 2) {
+        return ic->n_pins / 2 + pin;
+    } else {
+        return pin - ic->n_pins / 2;
+    }
 }
 
 void prepare_canvas(DrawData* data) {
@@ -247,6 +294,32 @@ void draw_ics(DrawData* data, ICList ic_list) {
 
         SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
         SDL_RenderFillRect(data->renderer, &pin_one_rect);
+
+        uint current_row = first_ic_row(ic);
+        for(uint pin = 1; pin <= ic->n_pins / 2; pin++, current_row++) {
+            uint no_rotation_pin = pin_number_no_rotation(ic, pin);
+            uint pin_index = no_rotation_pin - 1;
+            Pin* p = ic->pins + pin_index;
+
+            Vec2 text_coord = text_cell_coord(current_row, ic->location.column, LEFT);
+            text_coord.x += TEXT_PADDING;
+
+            draw_text(data->renderer, data->clear_sans, data->text_color,
+                      p->label, text_coord.x, text_coord.y);
+        }
+
+        current_row--;
+        for(uint pin = ic->n_pins / 2 + 1; pin <= ic->n_pins; pin++, current_row--) {
+            uint no_rotation_pin = pin_number_no_rotation(ic, pin);
+            uint pin_index = no_rotation_pin - 1;
+            Pin* p = ic->pins + pin_index;
+
+            Vec2 text_coord = text_cell_coord(current_row, ic->location.column, RIGHT);
+            text_coord.x += TEXT_PADDING;
+
+            draw_text(data->renderer, data->clear_sans, data->text_color,
+                      p->label, text_coord.x, text_coord.y);
+        }
     }
 }
 

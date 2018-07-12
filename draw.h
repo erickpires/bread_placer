@@ -33,6 +33,7 @@ typedef unsigned int uint;
 
 #define LINE_WIDTH 4
 #define TEXT_FONT_SIZE 40
+#define TEXT_PADDING 10
 
 #define width_preserve_ratio(h) ((h * CANVAS_WIDTH) / CANVAS_HEIGHT)
 
