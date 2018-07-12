@@ -379,8 +379,6 @@ void draw_ics(DrawData* data, ICList ic_list) {
 }
 
 void draw_selection(DrawData* data, Selection selection) {
-    if(selection.state != HOVERING) { return; }
-
     Vec2 origin = ic_cell_coord(selection.row, selection.column);
 
     SDL_Rect selection_rect = {.x = origin.x,
@@ -388,7 +386,12 @@ void draw_selection(DrawData* data, Selection selection) {
                                .h = VERTICAL_STRIDE,
                                .w = IC_CELL_WIDTH};
 
-    SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0xbb, 0xff);
+    if(selection.state == HOVERING) {
+        SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0xbb, 0xff);
+    } else {
+        SDL_SetRenderDrawColor(data->renderer, 0xaa, 0x00, 0xbb, 0xff);
+    }
+
     SDL_RenderFillRect(data->renderer, &selection_rect);
 }
 
