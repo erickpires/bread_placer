@@ -246,7 +246,7 @@ static uint first_ic_row(IC* ic) {
         return loc.row;
     } else {
         uint ic_height = ic->n_pins / 2;
-        return loc.row - ic_height;
+        return loc.row - (ic_height - 1);
     }
 }
 
