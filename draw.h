@@ -80,6 +80,7 @@ void prepare_canvas(DrawData*);
 void draw_grid(DrawData*);
 void draw_numbers(DrawData*);
 void draw_ics(DrawData*, ICList);
+void draw_selection(DrawData*, Selection);
 
 void draw_canvas_to_framebuffer(DrawData* data);
 void swap_buffers(DrawData*);

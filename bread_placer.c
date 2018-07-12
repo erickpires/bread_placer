@@ -314,7 +314,7 @@ char* str_n_alloc_cpy(char* str, usize len) {
     return result;
 }
 
-void move_point(Vec2* point, int32 dx, int32 dy, int32 window_w, int32 window_h) {
+static void move_point(Vec2* point, int32 dx, int32 dy, int32 window_w, int32 window_h) {
     point->x += dx;
     point->y += dy;
 
@@ -333,6 +333,17 @@ void move_point(Vec2* point, int32 dx, int32 dy, int32 window_w, int32 window_h)
     if(point->y +  window_h >= CANVAS_HEIGHT) {
         point->y = CANVAS_HEIGHT - window_h;
     }
+}
+
+static void mave_selection(Selection* selection, int32 d_column, int32 d_row) {
+    selection->column += d_column;
+    if(selection->column > 3) { selection->column = 3; }
+    if(selection->column < 1) { selection->column = 1; }
+
+    selection->row += d_row;
+    if(selection->row > 64) { selection->row = 64; }
+    if(selection->row < 1) { selection->row = 1; }
+
 }
 
 int main(int args_count, char** args_values) {
@@ -403,6 +414,7 @@ int main(int args_count, char** args_values) {
         read_project_file(project_filename, &ic_list);
     }
 
+    Selection selection = {.row = 1, .column = 1};
     DrawData dd = init_SDL();
     bool is_running = true;
 
@@ -442,6 +454,18 @@ int main(int args_count, char** args_values) {
                     move_point(&dd.zoom_origin, 1 * PAN_INCREMENT, 0,
                                dd.width, dd.height);
                     break;
+                case SDLK_LEFT:
+                    mave_selection(&selection, -1, 0);
+                    break;
+                case SDLK_RIGHT:
+                    mave_selection(&selection, 1, 0);
+                    break;
+                case SDLK_UP:
+                    mave_selection(&selection, 0, -1);
+                    break;
+                case SDLK_DOWN:
+                    mave_selection(&selection, 0, 1);
+                    break;
                 default:
                     printf("Key pressed: %d\n", e.key.keysym.sym);
                 }
@@ -452,6 +476,7 @@ int main(int args_count, char** args_values) {
         draw_grid(&dd);
         draw_numbers(&dd);
         draw_ics(&dd, ic_list);
+        draw_selection(&dd, selection);
 
         draw_canvas_to_framebuffer(&dd);
         swap_buffers(&dd);

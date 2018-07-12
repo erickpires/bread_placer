@@ -189,6 +189,29 @@ void draw_numbers(DrawData* data) {
     }
 }
 
+static Vec2 ic_cell_coord(uint row, uint column) {
+    Vec2 result;
+
+    result.y = (row - 1) * VERTICAL_STRIDE;
+    result.x = 0;
+
+    // NOTE(erick): This is very ugly, cumbersome and spaghetti. But it's fun anyway.
+    switch(column) {
+    case 3:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 2:
+        result.x += NUMBER_CELL_WIDTH + 2 * TEXT_CELL_WIDTH + IC_CELL_WIDTH;
+    case 1:
+        result.x += NUMBER_CELL_WIDTH + TEXT_CELL_WIDTH;
+        break;
+    default:
+        fprintf(stderr, "Invalid IC column (%d).\n", column);
+        exit(5);
+    }
+
+    return result;
+}
+
 static Vec2 text_cell_coord(uint row, uint column, ColumnSide side) {
     Vec2 result;
 
@@ -353,6 +376,20 @@ void draw_ics(DrawData* data, ICList ic_list) {
                       ALIGN_LEFT);
         }
     }
+}
+
+void draw_selection(DrawData* data, Selection selection) {
+    if(selection.state != HOVERING) { return; }
+
+    Vec2 origin = ic_cell_coord(selection.row, selection.column);
+
+    SDL_Rect selection_rect = {.x = origin.x,
+                               .y = origin.y,
+                               .h = VERTICAL_STRIDE,
+                               .w = IC_CELL_WIDTH};
+
+    SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0xbb, 0xff);
+    SDL_RenderFillRect(data->renderer, &selection_rect);
 }
 
 void draw_canvas_to_framebuffer(DrawData* data) {
