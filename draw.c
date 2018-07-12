@@ -65,6 +65,16 @@ DrawData init_SDL() {
     result.white_color.g = 0xff;
     result.white_color.a = 0xff;
 
+    result.vcc_color.r = 0xff;
+    result.vcc_color.b = 0x00;
+    result.vcc_color.g = 0x00;
+    result.vcc_color.a = 0xff;
+
+    result.gnd_color.r = 0x00;
+    result.gnd_color.b = 0x00;
+    result.gnd_color.g = 0xff;
+    result.gnd_color.a = 0xff;
+
     result.clear_sans = TTF_OpenFont("ClearSans-Medium.ttf", TEXT_FONT_SIZE);
     result.clear_sans_bold = TTF_OpenFont("ClearSans-Bold.ttf", TEXT_FONT_SIZE);
 
@@ -313,8 +323,11 @@ void draw_ics(DrawData* data, ICList ic_list) {
             Pin* p = ic->pins + pin_index;
 
             Vec2 text_coord = text_cell_coord(current_row, ic->location.column, LEFT);
+            SDL_Color color = data->text_color;
+            if(p->type == VCC) { color = data->vcc_color; }
+            if(p->type == GND) { color = data->gnd_color; }
 
-            draw_text(data->renderer, data->clear_sans, data->text_color,
+            draw_text(data->renderer, data->clear_sans, color,
                       p->label, text_coord.x + TEXT_CELL_WIDTH,
                       text_coord.y, TEXT_PADDING, 0, ALIGN_RIGHT);
         }
@@ -326,8 +339,11 @@ void draw_ics(DrawData* data, ICList ic_list) {
             Pin* p = ic->pins + pin_index;
 
             Vec2 text_coord = text_cell_coord(current_row, ic->location.column, RIGHT);
+            SDL_Color color = data->text_color;
+            if(p->type == VCC) { color = data->vcc_color; }
+            if(p->type == GND) { color = data->gnd_color; }
 
-            draw_text(data->renderer, data->clear_sans, data->text_color,
+            draw_text(data->renderer, data->clear_sans, color,
                       p->label, text_coord.x, text_coord.y, TEXT_PADDING, 0,
                       ALIGN_LEFT);
         }
