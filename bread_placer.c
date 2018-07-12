@@ -340,13 +340,13 @@ static bool row_is_inside_ic(IC* ic, uint row) {
 
     if(ic->location.orientation == UP) {
         min_row = ic->location.row;
-        max_row = min_row + ic->n_pins / 2;
+        max_row = min_row + (ic->n_pins / 2 - 1);
     } else {
         max_row = ic->location.row;
-        min_row = max_row - ic->n_pins / 2;
+        min_row = max_row - (ic->n_pins / 2 - 1);
     }
 
-    return (row >= min_row && row < max_row);
+    return (row >= min_row && row <= max_row);
 }
 
 static bool try_to_move_ic(ICList list, IC* ic, int32 d_column, int32 d_row) {
@@ -354,10 +354,10 @@ static bool try_to_move_ic(ICList list, IC* ic, int32 d_column, int32 d_row) {
 
     if(ic->location.orientation == UP) {
         min_row = ic->location.row;
-        max_row = min_row + ic->n_pins / 2;
+        max_row = min_row + (ic->n_pins / 2 - 1);
     } else {
         max_row = ic->location.row;
-        min_row = max_row - ic->n_pins / 2;
+        min_row = max_row - (ic->n_pins / 2 - 1);
     }
 
     uint new_column = ic->location.column + d_column;
@@ -368,8 +368,7 @@ static bool try_to_move_ic(ICList list, IC* ic, int32 d_column, int32 d_row) {
     if(new_column > 3) { return false; }
 
     if(new_min_row < 1)  { return false; }
-    // ISSUE(erick): This doesn't seems right.
-    if(new_max_row > 65) { return false; }
+    if(new_max_row > 64) { return false; }
 
     for(usize ic_index = 0; ic_index < list.count; ic_index++) {
         IC* test_ic = list.data + ic_index;
