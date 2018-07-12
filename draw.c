@@ -14,6 +14,11 @@ typedef enum {
     RIGHT
 } ColumnSide;
 
+typedef enum {
+    ALIGN_LEFT,
+    ALIGN_RIGHT,
+} Alignmnent;
+
 static void save_texture(SDL_Renderer*, SDL_Texture*, const char *);
 
 DrawData init_SDL() {
@@ -67,13 +72,19 @@ DrawData init_SDL() {
 }
 
 static void draw_text(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color,
-                      char* text, int x0, int y0) {
+                      char* text, int x0, int y0, int padding_x, int padding_y,
+                      Alignmnent alignment) {
     SDL_Surface* text_surf = TTF_RenderText_Solid(font, text, color);
     SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surf);
 
     int w, h;
     SDL_QueryTexture(text_texture, NULL, NULL, &w, &h);
-    SDL_Rect dest_rect = {.x = x0, .y = y0, .w = w, .h = h};
+    SDL_Rect dest_rect;
+    dest_rect.x = alignment == ALIGN_LEFT ? x0 + padding_x : x0 - w - padding_x;
+
+    dest_rect.y = y0 + padding_y;
+    dest_rect.w = w;
+    dest_rect.h = h;
 
     SDL_RenderCopy(renderer, text_texture, NULL, &dest_rect);
 
@@ -155,14 +166,14 @@ void draw_numbers(DrawData* data) {
     int horizontal_stride = 2 * TEXT_CELL_WIDTH + TEXT_CELL_WIDTH + NUMBER_CELL_WIDTH;
 
     char buffer[4];
-    int current_y = -5;
+    int current_y = 0; //-5;
     for(uint i = 1; i <= 64; i++, current_y += VERTICAL_STRIDE) {
         sprintf(buffer, "%2d", i);
 
-        int current_x = 5;
+        int current_x = NUMBER_CELL_WIDTH; //5;
         for(uint j = 0; j < 4; j++, current_x += horizontal_stride) {
             draw_text(data->renderer, data->clear_sans, data->text_color, buffer,
-                      current_x, current_y);
+                      current_x, current_y, 5, -5, RIGHT);
         }
     }
 }
@@ -302,10 +313,10 @@ void draw_ics(DrawData* data, ICList ic_list) {
             Pin* p = ic->pins + pin_index;
 
             Vec2 text_coord = text_cell_coord(current_row, ic->location.column, LEFT);
-            text_coord.x += TEXT_PADDING;
 
             draw_text(data->renderer, data->clear_sans, data->text_color,
-                      p->label, text_coord.x, text_coord.y);
+                      p->label, text_coord.x + TEXT_CELL_WIDTH,
+                      text_coord.y, TEXT_PADDING, 0, ALIGN_RIGHT);
         }
 
         current_row--;
@@ -315,10 +326,10 @@ void draw_ics(DrawData* data, ICList ic_list) {
             Pin* p = ic->pins + pin_index;
 
             Vec2 text_coord = text_cell_coord(current_row, ic->location.column, RIGHT);
-            text_coord.x += TEXT_PADDING;
 
             draw_text(data->renderer, data->clear_sans, data->text_color,
-                      p->label, text_coord.x, text_coord.y);
+                      p->label, text_coord.x, text_coord.y, TEXT_PADDING, 0,
+                      ALIGN_LEFT);
         }
     }
 }
@@ -331,7 +342,8 @@ void draw_canvas_to_framebuffer(DrawData* data) {
 
     char buffer[256];
     sprintf(buffer, "FPS: %.2f", 1.0 / data->dt);
-    draw_text(data->renderer, data->clear_sans, data->white_color, buffer, 0, 0);
+    draw_text(data->renderer, data->clear_sans, data->white_color, buffer,
+              0, 0, 0, 0, ALIGN_LEFT);
 
     SDL_Rect dest_rect;
     SDL_Rect origin_rect;
