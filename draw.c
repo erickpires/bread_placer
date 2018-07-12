@@ -75,8 +75,9 @@ DrawData init_SDL() {
     result.gnd_color.g = 0xff;
     result.gnd_color.a = 0xff;
 
-    result.clear_sans = TTF_OpenFont("ClearSans-Medium.ttf", TEXT_FONT_SIZE);
+    result.clear_sans = TTF_OpenFont("ClearSans-Regular.ttf", TEXT_FONT_SIZE);
     result.clear_sans_bold = TTF_OpenFont("ClearSans-Bold.ttf", TEXT_FONT_SIZE);
+
 
     return result;
 }
@@ -327,7 +328,9 @@ void draw_ics(DrawData* data, ICList ic_list) {
             if(p->type == VCC) { color = data->vcc_color; }
             if(p->type == GND) { color = data->gnd_color; }
 
-            draw_text(data->renderer, data->clear_sans, color,
+            TTF_Font* font = p->goes_outside ?data->clear_sans_bold : data->clear_sans;
+
+            draw_text(data->renderer, font, color,
                       p->label, text_coord.x + TEXT_CELL_WIDTH,
                       text_coord.y, TEXT_PADDING, 0, ALIGN_RIGHT);
         }
@@ -343,7 +346,9 @@ void draw_ics(DrawData* data, ICList ic_list) {
             if(p->type == VCC) { color = data->vcc_color; }
             if(p->type == GND) { color = data->gnd_color; }
 
-            draw_text(data->renderer, data->clear_sans, color,
+            TTF_Font* font = p->goes_outside ?data->clear_sans_bold : data->clear_sans;
+
+            draw_text(data->renderer, font, color,
                       p->label, text_coord.x, text_coord.y, TEXT_PADDING, 0,
                       ALIGN_LEFT);
         }

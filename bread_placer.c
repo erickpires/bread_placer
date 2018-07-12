@@ -111,7 +111,7 @@ PinType pin_type(char* label) {
     return NON_SPECIAL;
 }
 
-void assign_pin(IC* ic, uint pin_number, char* label) {
+void assign_pin(IC* ic, uint pin_number, bool goes_outside, char* label) {
     if(!label) {
         report_ic_error(ic);
         fprintf(stderr, "Null reference for pin [%d] label\n", pin_number);
@@ -138,9 +138,10 @@ void assign_pin(IC* ic, uint pin_number, char* label) {
         exit(3);
     }
 
-    Pin current_pin;
-    current_pin.label = label;
-    current_pin.type = pin_type(label);
+    Pin current_pin = {.label = label,
+                       .goes_outside = goes_outside,
+                       .type = pin_type(label)};
+
     ic->pins[index] = current_pin;
 }
 
@@ -191,13 +192,16 @@ ICList parse_ic_list_file(FILE* input_file) {
                 }
             } else {
                 uint current_pin;
+                bool current_goes_outside;
                 char* current_label;
 
-                if(*line != '#') {
+                if(*line != '#' && *line != '*') {
                     fprintf(stderr, "Parser is reading pins."
-                            " Lines must begin with '#'\n");
+                            " Lines must begin with '#' or '*'\n");
                     exit(2);
                 }
+
+                current_goes_outside = (*line == '#');
 
                 line++;
                 int read = sscanf(line, "%d ", &current_pin);
@@ -207,7 +211,8 @@ ICList parse_ic_list_file(FILE* input_file) {
                     fprintf(stderr, "No number found at: [#%s]\n", line);
                 }
 
-                assign_pin(&current_ic, current_pin, current_label);
+                assign_pin(&current_ic, current_pin, current_goes_outside,
+                           current_label);
             }
         }
     }

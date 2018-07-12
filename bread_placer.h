@@ -25,7 +25,7 @@ void validate_ic(IC);
 void trim_end(char*);
 char* cpystr(char*);
 PinType pin_type(char*);
-void assign_pin(IC*, uint, char*);
+void assign_pin(IC*, uint, bool, char*);
 ICList parse_ic_list_file(FILE*);
 
 #endif
