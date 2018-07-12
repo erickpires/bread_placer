@@ -350,22 +350,6 @@ void draw_canvas_to_framebuffer(DrawData* data) {
         origin_rect.h = data->height;
         origin_rect.w = data->width;
 
-        if(origin_rect.x < 0) {
-            zoom_origin->x = origin_rect.x = 0;
-        }
-
-        if(origin_rect.y < 0) {
-            zoom_origin->y = origin_rect.y = 0;
-        }
-
-        if(origin_rect.x + origin_rect.w >= CANVAS_WIDTH) {
-            zoom_origin->x = origin_rect.x = CANVAS_WIDTH - origin_rect.w;
-        }
-
-        if(origin_rect.y + origin_rect.h >= CANVAS_HEIGHT) {
-            zoom_origin->y = origin_rect.y = CANVAS_HEIGHT - origin_rect.h;
-        }
-
         origin = &origin_rect;
     }
 

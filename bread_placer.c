@@ -309,9 +309,25 @@ char* str_n_alloc_cpy(char* str, usize len) {
     return result;
 }
 
-void move_point(Vec2* point, int32 dx, int32 dy) {
+void move_point(Vec2* point, int32 dx, int32 dy, int32 window_w, int32 window_h) {
     point->x += dx;
     point->y += dy;
+
+    if(point->x < 0) {
+        point->x = 0;
+    }
+
+    if(point->y < 0) {
+        point->y = 0;
+    }
+
+    if(point->x +  window_w >= CANVAS_WIDTH) {
+        point->x = CANVAS_WIDTH - window_w;
+    }
+
+    if(point->y +  window_h >= CANVAS_HEIGHT) {
+        point->y = CANVAS_HEIGHT - window_h;
+    }
 }
 
 int main(int args_count, char** args_values) {
@@ -406,16 +422,20 @@ int main(int args_count, char** args_values) {
                     dd.zoomed_in = !dd.zoomed_in;
                     break;
                 case SDLK_w:
-                    move_point(&dd.zoom_origin, 0, -1 * PAN_INCREMENT);
+                    move_point(&dd.zoom_origin, 0, -1 * PAN_INCREMENT,
+                               dd.width, dd.height);
                     break;
                 case SDLK_s:
-                    move_point(&dd.zoom_origin, 0, 1 * PAN_INCREMENT);
+                    move_point(&dd.zoom_origin, 0, 1 * PAN_INCREMENT,
+                               dd.width, dd.height);
                     break;
                 case SDLK_a:
-                    move_point(&dd.zoom_origin, -1 * PAN_INCREMENT, 0);
+                    move_point(&dd.zoom_origin, -1 * PAN_INCREMENT, 0,
+                               dd.width, dd.height);
                     break;
                 case SDLK_d:
-                    move_point(&dd.zoom_origin, 1 * PAN_INCREMENT, 0);
+                    move_point(&dd.zoom_origin, 1 * PAN_INCREMENT, 0,
+                               dd.width, dd.height);
                     break;
                 default:
                     printf("Key pressed: %d\n", e.key.keysym.sym);
