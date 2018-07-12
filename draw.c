@@ -278,7 +278,6 @@ static Vec2 coord_of_ic(IC* ic, Vec2* pin_one) {
         pin_one->y = (loc.row - 1) * VERTICAL_STRIDE;
         pin_one->x = result.x;
         if(loc.orientation == DOWN) {
-            pin_one->y -= VERTICAL_STRIDE;
             pin_one->x += IC_CELL_WIDTH - VERTICAL_STRIDE;
         }
     }
