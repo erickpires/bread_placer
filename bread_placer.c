@@ -420,6 +420,16 @@ static void try_to_select_ic(ICList list, Selection* selection) {
     }
 }
 
+static void rotate_ic(IC* ic) {
+    if(ic->location.orientation == UP) {
+        ic->location.orientation = DOWN;
+        ic->location.row += (ic->n_pins / 2 - 1);
+    } else {
+        ic->location.orientation = UP;
+        ic->location.row -= (ic->n_pins / 2 - 1);
+    }
+}
+
 int main(int args_count, char** args_values) {
     if(args_count != 2) {
         fprintf(stderr, "Usage: %s (ics__list_file | prj_file)\n", args_values[0]);
@@ -540,6 +550,11 @@ int main(int args_count, char** args_values) {
                 case SDLK_DOWN:
                     move_selection(ic_list, &selection, 0, 1);
                     break;
+                case SDLK_r:
+                    if(selection.state == SELECTING) {
+                        rotate_ic(selection.selected_ic);
+                    }
+                    break;
                 case SDLK_RETURN:
                 case SDLK_SPACE:
                     if(selection.state == HOVERING) {
@@ -565,6 +580,13 @@ int main(int args_count, char** args_values) {
         draw_canvas_to_framebuffer(&dd);
         swap_buffers(&dd);
     }
+
+    // NOTE(erick): Drawing to canvas to emit a clean image (i.e. without selector
+    //  and ratsnest).
+    prepare_canvas(&dd);
+    draw_grid(&dd);
+    draw_numbers(&dd);
+    draw_ics(&dd, ic_list);
 
     save_image(&dd);
     save_project_file(project_filename, &ic_list);
