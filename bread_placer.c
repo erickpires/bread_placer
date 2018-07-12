@@ -335,7 +335,7 @@ static void move_point(Vec2* point, int32 dx, int32 dy, int32 window_w, int32 wi
     }
 }
 
-static void mave_selection(Selection* selection, int32 d_column, int32 d_row) {
+static void move_selection(Selection* selection, int32 d_column, int32 d_row) {
     selection->column += d_column;
     if(selection->column > 3) { selection->column = 3; }
     if(selection->column < 1) { selection->column = 1; }
@@ -455,16 +455,16 @@ int main(int args_count, char** args_values) {
                                dd.width, dd.height);
                     break;
                 case SDLK_LEFT:
-                    mave_selection(&selection, -1, 0);
+                    move_selection(&selection, -1, 0);
                     break;
                 case SDLK_RIGHT:
-                    mave_selection(&selection, 1, 0);
+                    move_selection(&selection, 1, 0);
                     break;
                 case SDLK_UP:
-                    mave_selection(&selection, 0, -1);
+                    move_selection(&selection, 0, -1);
                     break;
                 case SDLK_DOWN:
-                    mave_selection(&selection, 0, 1);
+                    move_selection(&selection, 0, 1);
                     break;
                 default:
                     printf("Key pressed: %d\n", e.key.keysym.sym);
