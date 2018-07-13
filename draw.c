@@ -84,7 +84,7 @@ DrawData init_SDL() {
 
 static SDL_Texture* text_to_texture(SDL_Renderer* renderer, TTF_Font* font,
                                     SDL_Color color, char* text) {
-    SDL_Surface* text_surf = TTF_RenderText_Solid(font, text, color);
+    SDL_Surface* text_surf = TTF_RenderText_Blended(font, text, color);
     SDL_Texture* result = SDL_CreateTextureFromSurface(renderer, text_surf);
 
     SDL_FreeSurface(text_surf);
