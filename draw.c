@@ -77,16 +77,24 @@ DrawData init_SDL() {
 
     result.clear_sans = TTF_OpenFont("ClearSans-Regular.ttf", TEXT_FONT_SIZE);
     result.clear_sans_bold = TTF_OpenFont("ClearSans-Bold.ttf", TEXT_FONT_SIZE);
+    result.outside_font = TTF_OpenFont("ClearSans-Regular.ttf", OUTSIDE_TEXT_SIZE);
 
+    return result;
+}
 
+static SDL_Texture* text_to_texture(SDL_Renderer* renderer, TTF_Font* font,
+                                    SDL_Color color, char* text) {
+    SDL_Surface* text_surf = TTF_RenderText_Solid(font, text, color);
+    SDL_Texture* result = SDL_CreateTextureFromSurface(renderer, text_surf);
+
+    SDL_FreeSurface(text_surf);
     return result;
 }
 
 static void draw_text(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color,
                       char* text, int x0, int y0, int padding_x, int padding_y,
                       Alignmnent alignment) {
-    SDL_Surface* text_surf = TTF_RenderText_Solid(font, text, color);
-    SDL_Texture* text_texture = SDL_CreateTextureFromSurface(renderer, text_surf);
+    SDL_Texture* text_texture = text_to_texture(renderer, font, color, text);
 
     int w, h;
     SDL_QueryTexture(text_texture, NULL, NULL, &w, &h);
@@ -99,7 +107,6 @@ static void draw_text(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color,
 
     SDL_RenderCopy(renderer, text_texture, NULL, &dest_rect);
 
-    SDL_FreeSurface(text_surf);
     SDL_DestroyTexture(text_texture);
 }
 
@@ -392,6 +399,37 @@ void draw_selection(DrawData* data, Selection selection) {
     }
 
     SDL_RenderFillRect(data->renderer, &selection_rect);
+}
+
+void draw_outside_ics_count(DrawData* data, ICList ic_list) {
+    uint count = 0;
+    for(usize ic_index = 0; ic_index < ic_list.count; ic_index++) {
+        if(ic_list.data[ic_index].location.column == 0) {
+            count++;
+        }
+    }
+
+    char buffer[256];
+    sprintf(buffer, "Outside: %d", count);
+
+    SDL_Texture* text_texture = text_to_texture(data->renderer, data->outside_font,
+                                                data->white_color, buffer);
+    int text_h, text_w;
+    SDL_QueryTexture(text_texture, NULL, NULL, &text_w, &text_h);
+
+    SDL_Rect text_rect = {.y = TEXT_PADDING, .w = text_w, .h = text_h};
+    text_rect.x = data->width - text_rect.w - TEXT_PADDING;
+
+    SDL_Rect bg_rect = {.x = text_rect.x - 1 * TEXT_PADDING,
+                        .y = text_rect.y - 1 * TEXT_PADDING,
+                        .h = text_rect.h + 2 * TEXT_PADDING,
+                        .w = text_rect.w + 2 * TEXT_PADDING};
+
+    SDL_SetRenderDrawColor(data->renderer, 0x33, 0x33, 0x33, 0xff);
+    SDL_RenderFillRect(data->renderer, &bg_rect);
+    SDL_RenderCopy(data->renderer, text_texture, NULL, &text_rect);
+
+    SDL_DestroyTexture(text_texture);
 }
 
 void draw_canvas_to_framebuffer(DrawData* data) {

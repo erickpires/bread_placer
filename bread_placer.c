@@ -10,6 +10,7 @@
 
 // TODO(erick): Error codes.
 // TODO(erick): Velocity control in zoom mode.
+// TODO(erick): Viewport must focus on selection when zoomed in.
 
 #define PAN_INCREMENT 10
 
@@ -578,6 +579,8 @@ int main(int args_count, char** args_values) {
         draw_selection(&dd, selection);
 
         draw_canvas_to_framebuffer(&dd);
+        draw_outside_ics_count(&dd, ic_list);
+
         swap_buffers(&dd);
     }
 

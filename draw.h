@@ -33,6 +33,7 @@ typedef unsigned int uint;
 
 #define LINE_WIDTH 4
 #define TEXT_FONT_SIZE 40
+#define OUTSIDE_TEXT_SIZE 20
 #define TEXT_PADDING 10
 
 #define width_preserve_ratio(h) ((h * CANVAS_WIDTH) / CANVAS_HEIGHT)
@@ -71,6 +72,7 @@ typedef struct {
 
     SDL_Color gnd_color;
     SDL_Color vcc_color;
+    TTF_Font* outside_font;
 } DrawData;
 
 
@@ -81,6 +83,7 @@ void draw_grid(DrawData*);
 void draw_numbers(DrawData*);
 void draw_ics(DrawData*, ICList);
 void draw_selection(DrawData*, Selection);
+void draw_outside_ics_count(DrawData*, ICList);
 
 void draw_canvas_to_framebuffer(DrawData* data);
 void swap_buffers(DrawData*);
