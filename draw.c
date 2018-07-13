@@ -402,12 +402,7 @@ void draw_selection(DrawData* data, Selection selection) {
 }
 
 void draw_outside_ics_count(DrawData* data, ICList ic_list) {
-    uint count = 0;
-    for(usize ic_index = 0; ic_index < ic_list.count; ic_index++) {
-        if(ic_list.data[ic_index].location.column == 0) {
-            count++;
-        }
-    }
+    uint count = count_outside_ics(ic_list);
 
     char buffer[256];
     sprintf(buffer, "Outside: %d", count);
@@ -427,6 +422,60 @@ void draw_outside_ics_count(DrawData* data, ICList ic_list) {
 
     SDL_SetRenderDrawColor(data->renderer, 0x33, 0x33, 0x33, 0xff);
     SDL_RenderFillRect(data->renderer, &bg_rect);
+    SDL_RenderCopy(data->renderer, text_texture, NULL, &text_rect);
+
+    SDL_DestroyTexture(text_texture);
+}
+
+void draw_outside_ics_list(DrawData* data, ICList ic_list, uint selected) {
+    // ISSUE(erick): This should be dynamic allocated.
+    char buffer[4096];
+    char* write_ptr = buffer;
+
+    for(usize ic_index = 0; ic_index < ic_list.count; ic_index++) {
+        IC* ic = ic_list.data + ic_index;
+        if(ic->location.column == 0) {
+            char tmp[16];
+
+            strcpy(write_ptr, ic->name);
+            write_ptr += strlen(ic->name);
+
+            sprintf(tmp, " (%d)\n", ic->n_pins);
+            strcpy(write_ptr, tmp);
+            write_ptr += strlen(tmp);
+        }
+    }
+
+    SDL_Surface* text_surf = TTF_RenderText_Blended_Wrapped(data->outside_font, buffer,
+                                                            data->white_color,
+                                                            data->width);
+    SDL_Texture* text_texture = SDL_CreateTextureFromSurface(data->renderer,
+                                                             text_surf);
+    SDL_FreeSurface(text_surf);
+
+    int text_h, text_w;
+    SDL_QueryTexture(text_texture, NULL, NULL, &text_w, &text_h);
+
+    SDL_Rect text_rect = {.x = TEXT_PADDING, .y = TEXT_PADDING,
+                          .w = text_w, .h = text_h};
+
+    SDL_Rect bg_rect = {.x = text_rect.x - 1 * TEXT_PADDING,
+                        .y = text_rect.y - 1 * TEXT_PADDING,
+                        .h = text_rect.h + 2 * TEXT_PADDING,
+                        .w = text_rect.w + 2 * TEXT_PADDING};
+
+    uint text_vertical_stride = text_h / count_outside_ics(ic_list);
+    SDL_Rect selected_bg = {.x = bg_rect.x,
+                            .y = selected * text_vertical_stride + TEXT_PADDING,
+                            .w = bg_rect.w,
+                            .h = text_vertical_stride};
+
+    SDL_SetRenderDrawColor(data->renderer, 0x33, 0x33, 0x33, 0xff);
+    SDL_RenderFillRect(data->renderer, &bg_rect);
+
+    SDL_SetRenderDrawColor(data->renderer, 0x11, 0x99, 0x11, 0xff);
+    SDL_RenderFillRect(data->renderer, &selected_bg);
+
     SDL_RenderCopy(data->renderer, text_texture, NULL, &text_rect);
 
     SDL_DestroyTexture(text_texture);

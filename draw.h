@@ -65,7 +65,10 @@ typedef struct {
     int width;
     int height;
 
+    // TODO(erick): This don't belong here!!!!
     bool zoomed_in;
+    bool is_selecting_outside_ic;
+    uint outside_ic_selected;
     Vec2 zoom_origin;
 
     float dt;
@@ -84,6 +87,7 @@ void draw_numbers(DrawData*);
 void draw_ics(DrawData*, ICList);
 void draw_selection(DrawData*, Selection);
 void draw_outside_ics_count(DrawData*, ICList);
+void draw_outside_ics_list(DrawData*, ICList, uint);
 
 void draw_canvas_to_framebuffer(DrawData* data);
 void swap_buffers(DrawData*);
