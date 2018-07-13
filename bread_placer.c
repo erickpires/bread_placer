@@ -540,6 +540,9 @@ int main(int args_count, char** args_values) {
         swap_buffers(&dd);
     }
 
+    draw_saving_screen(&dd);
+    swap_buffers(&dd);
+
     // NOTE(erick): Drawing to canvas to emit a clean image (i.e. without selector
     //  and ratsnest).
     prepare_canvas(&dd);

@@ -89,6 +89,8 @@ void draw_selection(DrawData*, Selection);
 void draw_outside_ics_count(DrawData*, ICList);
 void draw_outside_ics_list(DrawData*, ICList, uint);
 
+void draw_saving_screen(DrawData*);
+
 void draw_canvas_to_framebuffer(DrawData* data);
 void swap_buffers(DrawData*);
 

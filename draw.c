@@ -481,10 +481,31 @@ void draw_outside_ics_list(DrawData* data, ICList ic_list, uint selected) {
     SDL_DestroyTexture(text_texture);
 }
 
+void draw_saving_screen(DrawData* data) {
+    char* msg = "Saving...";
+    SDL_Surface* text_surf = TTF_RenderText_Blended(data->clear_sans_bold, msg,
+                                                    data->white_color);
+    SDL_Texture* text_texture = SDL_CreateTextureFromSurface(data->renderer,
+                                                             text_surf);
+
+    int text_h, text_w;
+    SDL_QueryTexture(text_texture, NULL, NULL, &text_w, &text_h);
+
+    SDL_Rect text_rect = {.x = data->width / 2 - text_w / 2,
+                          .y = data->height / 2 - text_h / 2,
+                          .w = text_w, .h = text_h};
+
+    SDL_SetRenderDrawColor(data->renderer, 0x33, 0x33, 0x33, 0xff);
+    SDL_RenderClear(data->renderer);
+    SDL_RenderCopy(data->renderer, text_texture, NULL, &text_rect);
+
+    SDL_DestroyTexture(text_texture);
+}
+
 void draw_canvas_to_framebuffer(DrawData* data) {
     // Detach the canvas;
     SDL_SetRenderTarget(data->renderer, NULL);
-    SDL_SetRenderDrawColor(data->renderer, 0xff, 0x00, 0xff, 0xff);
+    SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
     SDL_RenderClear(data->renderer);
 
     char buffer[256];
