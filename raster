@@ -10,18 +10,22 @@ output_file=${base}.svg
 
 if [ "$2" == "-colors" ]; then
     red_file=${base}_red.bmp
+    blue_file=${base}_blue.bmp
     green_file=${base}_green.bmp
     black_file=${base}_black.bmp
 
     red_svg=${base}_red.svg
+    blue_svg=${base}_blue.svg
     green_svg=${base}_green.svg
     black_svg=${base}_black.svg
 
     convert "$input_file" -fill white +opaque "#ff0000" "$red_file"
+    convert "$input_file" -fill white +opaque "#0000ff" "$blue_file"
     convert "$input_file" -fill white +opaque "#00ff00" "$green_file"
     convert "$input_file" -fill white +opaque "#000000" "$black_file"
 
     potrace -s --color "#ff0000" -o "$red_svg" "$red_file"
+    potrace -s --color "#ff0000" -o "$blue_svg" "$blue_file"
     potrace -s --color "#00ff00" -o "$green_svg" "$green_file"
     potrace -s --color "#000000" -o "$black_svg" "$black_file"
 else

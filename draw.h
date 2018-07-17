@@ -75,6 +75,7 @@ typedef struct {
 
     SDL_Color gnd_color;
     SDL_Color vcc_color;
+    SDL_Color not_connected_color;
     TTF_Font* outside_font;
 } DrawData;
 

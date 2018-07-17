@@ -75,6 +75,11 @@ DrawData init_SDL() {
     result.gnd_color.g = 0xff;
     result.gnd_color.a = 0xff;
 
+    result.not_connected_color.r = 0x00;
+    result.not_connected_color.b = 0xff;
+    result.not_connected_color.g = 0x00;
+    result.not_connected_color.a = 0xff;
+
     result.clear_sans = TTF_OpenFont("ClearSans-Regular.ttf", TEXT_FONT_SIZE);
     result.clear_sans_bold = TTF_OpenFont("ClearSans-Bold.ttf", TEXT_FONT_SIZE);
     result.outside_font = TTF_OpenFont("ClearSans-Regular.ttf", OUTSIDE_TEXT_SIZE);
@@ -345,8 +350,9 @@ static void draw_ic_pins(IC* ic, DrawData* data) {
         Vec2 text_coord = text_cell_coord(current_row,
                                           ic->location.column, RIGHT);
         SDL_Color color = data->text_color;
-        if(p->type == VCC) { color = data->vcc_color; }
-        if(p->type == GND) { color = data->gnd_color; }
+        if(p->type == VCC)            { color = data->vcc_color; }
+        if(p->type == GND)            { color = data->gnd_color; }
+        if(p->type == NOT_CONNECTED)  { color = data->not_connected_color; }
 
         TTF_Font* font = p->goes_outside ?
             data->clear_sans_bold : data->clear_sans;
