@@ -1,5 +1,23 @@
 #!/bin/bash
 
+PREFIX=$(cat <<EOF
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
+ "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="2480.000000pt" height="3508.000000pt" viewBox="0 0 2480.000000 3508.000000"
+ preserveAspectRatio="xMidYMid meet">
+<metadata>
+Created by potrace 1.15, written by Peter Selinger 2001-2017
+</metadata>
+EOF
+)
+
+SUFFIX=$( cat <<EOF
+</svg>
+EOF
+)
+
 if [ -z "$1" ]; then
     exit
 fi
@@ -28,6 +46,15 @@ if [ "$2" == "-colors" ]; then
     potrace -s --color "#ff0000" -o "$blue_svg" "$blue_file"
     potrace -s --color "#00ff00" -o "$green_svg" "$green_file"
     potrace -s --color "#000000" -o "$black_svg" "$black_file"
+
+    echo "$PREFIX" > "$output_file"
+    ./xpath.py "$red_svg" "//p:g" >> "$output_file"
+    ./xpath.py "$green_svg" "//p:g" >> "$output_file"
+    ./xpath.py "$blue_svg" "//p:g" >> "$output_file"
+    ./xpath.py "$black_svg" "//p:g" >> "$output_file"
+    echo "$SUFFIX" >> "$output_file"
+
+    rm "$red_file" "$red_svg" "$green_file" "$green_svg" "$blue_file" "$blue_svg" "$black_file" "$black_svg"
 else
     potrace -s -o "$output_file" "$input_file"
 fi
