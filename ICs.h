@@ -80,6 +80,23 @@ typedef struct {
     uint column;
 } Selection;
 
+typedef struct _Connections {
+    struct _Connections* next_connection;
+    IC* ic;
+    uint pin_number;
+} Connections;
+
+typedef struct {
+    char* label;
+    Connections* connections;
+} LabelEntry;
+
+typedef struct {
+    LabelEntry* entries;
+    usize count;
+    usize capacity;
+} LabelTable;
+
 bool row_is_inside_ic(IC*, uint);
 bool try_to_move_ic(ICList, IC*, int32, int32);
 void move_selection(ICList, Selection*, int32, int32);

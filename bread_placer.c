@@ -358,6 +358,7 @@ int main(int args_count, char** args_values) {
     char* project_name;
     char* ics_list_filename;
     char* project_filename;
+    char* bmp_filename;
 
     char* input_filename = args_values[1];
     char* input_extension = extension(input_filename);
@@ -402,6 +403,9 @@ int main(int args_count, char** args_values) {
         fprintf(stderr, "You must pass either a project file or a ics_list file\n");
         exit(2);
     }
+
+    bmp_filename = (char*) malloc(strlen(project_name) + strlen(".bmp") + 1);
+    sprintf(bmp_filename, "%s.bmp", project_name);
 
     FILE* ics_list_file = fopen(ics_list_filename, "r");
     if(!ics_list_file) {
@@ -550,7 +554,7 @@ int main(int args_count, char** args_values) {
     draw_numbers(&dd);
     draw_ics(&dd, ic_list);
 
-    save_image(&dd);
+    save_image(&dd, bmp_filename);
     save_project_file(project_filename, &ic_list);
 
     return 0;

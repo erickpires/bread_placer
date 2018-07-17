@@ -597,8 +597,7 @@ void swap_buffers(DrawData* data) {
     SDL_RenderPresent(data->renderer);
 }
 
-void save_image(DrawData* data) {
-    char* output_filename = "output.bmp";
+void save_image(DrawData* data, char* output_filename) {
     char* raster_script = "./raster ";
     char* raster_command = (char*) malloc(strlen(output_filename) +
                                           strlen(raster_script) + 1);

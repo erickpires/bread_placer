@@ -94,6 +94,6 @@ void draw_saving_screen(DrawData*);
 void draw_canvas_to_framebuffer(DrawData* data);
 void swap_buffers(DrawData*);
 
-void save_image(DrawData*);
+void save_image(DrawData*, char*);
 
 #endif
