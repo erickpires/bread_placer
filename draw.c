@@ -316,6 +316,86 @@ void prepare_canvas(DrawData* data) {
     SDL_RenderClear(data->renderer);
 }
 
+static void draw_ic_pins(IC* ic, DrawData* data) {
+    uint current_row = first_ic_row(ic);
+    for(uint pin = 1; pin <= ic->n_pins / 2; pin++, current_row++) {
+        uint no_rotation_pin = pin_number_no_rotation(ic, pin);
+        uint pin_index = no_rotation_pin - 1;
+        Pin* p = ic->pins + pin_index;
+
+        Vec2 text_coord = text_cell_coord(current_row, ic->location.column, LEFT);
+        SDL_Color color = data->text_color;
+        if(p->type == VCC) { color = data->vcc_color; }
+        if(p->type == GND) { color = data->gnd_color; }
+
+        TTF_Font* font = p->goes_outside ?
+            data->clear_sans_bold : data->clear_sans;
+
+        draw_text(data->renderer, font, color,
+                  p->label, text_coord.x + TEXT_CELL_WIDTH,
+                  text_coord.y, TEXT_PADDING, 0, ALIGN_RIGHT);
+    }
+
+    current_row--;
+    for(uint pin = ic->n_pins / 2 + 1; pin <= ic->n_pins; pin++, current_row--) {
+        uint no_rotation_pin = pin_number_no_rotation(ic, pin);
+        uint pin_index = no_rotation_pin - 1;
+        Pin* p = ic->pins + pin_index;
+
+        Vec2 text_coord = text_cell_coord(current_row,
+                                          ic->location.column, RIGHT);
+        SDL_Color color = data->text_color;
+        if(p->type == VCC) { color = data->vcc_color; }
+        if(p->type == GND) { color = data->gnd_color; }
+
+        TTF_Font* font = p->goes_outside ?
+            data->clear_sans_bold : data->clear_sans;
+
+        draw_text(data->renderer, font, color,
+                  p->label, text_coord.x, text_coord.y, TEXT_PADDING, 0,
+                  ALIGN_LEFT);
+    }
+}
+
+static void draw_ic_name(IC* ic, DrawData* data, SDL_Rect ic_rect) {
+    SDL_Texture* name_text = text_to_texture(data->renderer, data->clear_sans_bold,
+                                             data->text_color, ic->name);
+    SDL_Texture* code_text = text_to_texture(data->renderer, data->clear_sans,
+                                             data->text_color, ic->code);
+
+    SDL_Point center = {.x = ic_rect.x + ic_rect.w / 2,
+                        .y = ic_rect.y + ic_rect.h / 2};
+
+    int name_w, name_h;
+    SDL_QueryTexture(name_text, NULL, NULL, &name_w, &name_h);
+    SDL_Rect name_rect = {.x = center.x - name_w / 2,
+                          .w = name_w, .h = name_h};
+
+    int code_w, code_h;
+    SDL_QueryTexture(code_text, NULL, NULL, &code_w, &code_h);
+    SDL_Rect code_rect = {.x = center.x - code_w / 2,
+                          .w = code_w, .h = code_h};
+
+    double rotation;
+    if(ic->location.orientation == UP) {
+        name_rect.y = center.y - name_h - TEXT_PADDING;
+        code_rect.y = center.y + TEXT_PADDING;
+        rotation = 0.0;
+    } else {
+        name_rect.y = center.y + TEXT_PADDING;
+        code_rect.y = center.y - name_h - TEXT_PADDING;
+        rotation = 180.0;
+    }
+
+    SDL_RenderCopyEx(data->renderer, name_text, NULL, &name_rect, rotation, NULL,
+                     SDL_FLIP_NONE);
+    SDL_RenderCopyEx(data->renderer, code_text, NULL, &code_rect, rotation, NULL,
+                     SDL_FLIP_NONE);
+
+    SDL_DestroyTexture(name_text);
+    SDL_DestroyTexture(code_text);
+}
+
 void draw_ics(DrawData* data, ICList ic_list) {
     for(usize ic_index = 0; ic_index < ic_list.count; ic_index++) {
         IC* ic = ic_list.data + ic_index;
@@ -346,41 +426,8 @@ void draw_ics(DrawData* data, ICList ic_list) {
         SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
         SDL_RenderFillRect(data->renderer, &pin_one_rect);
 
-        uint current_row = first_ic_row(ic);
-        for(uint pin = 1; pin <= ic->n_pins / 2; pin++, current_row++) {
-            uint no_rotation_pin = pin_number_no_rotation(ic, pin);
-            uint pin_index = no_rotation_pin - 1;
-            Pin* p = ic->pins + pin_index;
-
-            Vec2 text_coord = text_cell_coord(current_row, ic->location.column, LEFT);
-            SDL_Color color = data->text_color;
-            if(p->type == VCC) { color = data->vcc_color; }
-            if(p->type == GND) { color = data->gnd_color; }
-
-            TTF_Font* font = p->goes_outside ?data->clear_sans_bold : data->clear_sans;
-
-            draw_text(data->renderer, font, color,
-                      p->label, text_coord.x + TEXT_CELL_WIDTH,
-                      text_coord.y, TEXT_PADDING, 0, ALIGN_RIGHT);
-        }
-
-        current_row--;
-        for(uint pin = ic->n_pins / 2 + 1; pin <= ic->n_pins; pin++, current_row--) {
-            uint no_rotation_pin = pin_number_no_rotation(ic, pin);
-            uint pin_index = no_rotation_pin - 1;
-            Pin* p = ic->pins + pin_index;
-
-            Vec2 text_coord = text_cell_coord(current_row, ic->location.column, RIGHT);
-            SDL_Color color = data->text_color;
-            if(p->type == VCC) { color = data->vcc_color; }
-            if(p->type == GND) { color = data->gnd_color; }
-
-            TTF_Font* font = p->goes_outside ?data->clear_sans_bold : data->clear_sans;
-
-            draw_text(data->renderer, font, color,
-                      p->label, text_coord.x, text_coord.y, TEXT_PADDING, 0,
-                      ALIGN_LEFT);
-        }
+        draw_ic_name(ic, data, ic_outside);
+        draw_ic_pins(ic, data);
     }
 }
 
