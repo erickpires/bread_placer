@@ -22,7 +22,7 @@ typedef enum {
 static void save_texture(SDL_Renderer*, SDL_Texture*, const char *);
 
 DrawData init_SDL() {
-    DrawData result;
+    DrawData result = {};
 
     if(SDL_Init(SDL_INIT_EVERYTHING) != 0) {
         fprintf(stderr, "Failed to init SDL.");
@@ -196,7 +196,7 @@ void draw_numbers(DrawData* data) {
         int current_x = NUMBER_CELL_WIDTH; //5;
         for(uint j = 0; j < 4; j++, current_x += horizontal_stride) {
             draw_text(data->renderer, data->clear_sans, data->text_color, buffer,
-                      current_x, current_y, 5, -5, RIGHT);
+                      current_x, current_y, 5, -5, ALIGN_RIGHT);
         }
     }
 }
@@ -481,6 +481,7 @@ void draw_outside_ics_count(DrawData* data, ICList ic_list) {
 }
 
 void draw_outside_ics_list(DrawData* data, ICList ic_list, uint selected) {
+    if(!count_outside_ics(ic_list)) { return; }
     // ISSUE(erick): This should be dynamic allocated.
     char buffer[4096];
     char* write_ptr = buffer;

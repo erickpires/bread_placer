@@ -55,12 +55,16 @@ typedef struct {
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_Texture* canvas;
-    SDL_Color text_color;
-    // BUG(erick): If I put something here the code stops working.
 
-    SDL_Color white_color;
     TTF_Font* clear_sans;
     TTF_Font* clear_sans_bold;
+    TTF_Font* outside_font;
+
+    SDL_Color text_color;
+    SDL_Color gnd_color;
+    SDL_Color vcc_color;
+    SDL_Color not_connected_color;
+    SDL_Color white_color;
 
     int width;
     int height;
@@ -72,11 +76,6 @@ typedef struct {
     Vec2 zoom_origin;
 
     float dt;
-
-    SDL_Color gnd_color;
-    SDL_Color vcc_color;
-    SDL_Color not_connected_color;
-    TTF_Font* outside_font;
 } DrawData;
 
 
