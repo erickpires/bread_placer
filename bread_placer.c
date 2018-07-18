@@ -439,7 +439,7 @@ int main(int args_count, char** args_values) {
 
             } else if(e.type == SDL_KEYDOWN) {
                 switch (e.key.keysym.sym) {
-                case SDLK_ESCAPE:
+                case SDLK_ESCAPE: // Fall-through
                 case SDLK_q:
                     is_running = false;
                     break;
@@ -496,6 +496,7 @@ int main(int args_count, char** args_values) {
                         rotate_ic(selection.selected_ic);
                     }
                     break;
+                case SDLK_BACKSPACE: // Fall-through
                 case SDLK_DELETE:
                     if(selection.state == SELECTING) {
                         put_ic_outside(selection.selected_ic);
@@ -508,21 +509,25 @@ int main(int args_count, char** args_values) {
                         dd.outside_ic_selected = 0;
                     }
                     break;
-                case SDLK_SPACE:
-                    dd.is_selecting_outside_ic = false;
-                    bool success = move_outside_ic_in(ic_list, dd.outside_ic_selected,
-                                                      selection.row, selection.column);
-                    if(success) {
-                        try_to_select_ic(ic_list, &selection);
-                    }
-
-                    break;
+                case SDLK_SPACE: // Fall-through
                 case SDLK_RETURN:
-                    if(selection.state == HOVERING) {
-                        try_to_select_ic(ic_list, &selection);
+                    if(dd.is_selecting_outside_ic) {
+                        dd.is_selecting_outside_ic = false;
+                        bool success = move_outside_ic_in(ic_list,
+                                                          dd.outside_ic_selected,
+                                                          selection.row,
+                                                          selection.column);
+                        if(success) {
+                            try_to_select_ic(ic_list, &selection);
+                        }
+
                     } else {
-                        selection.state = HOVERING;
-                        selection.selected_ic = NULL;
+                        if(selection.state == HOVERING) {
+                            try_to_select_ic(ic_list, &selection);
+                        } else {
+                            selection.state = HOVERING;
+                            selection.selected_ic = NULL;
+                        }
                     }
 
                     break;
