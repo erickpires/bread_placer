@@ -556,16 +556,35 @@ void draw_saving_screen(DrawData* data) {
     SDL_DestroyTexture(text_texture);
 }
 
+void draw_debug_info(DrawData* data) {
+    char buffer[256];
+    sprintf(buffer, "FPS: %.2f", 1.0 / data->dt);
+
+    SDL_Texture* debug_text = text_to_texture(data->renderer, data->outside_font,
+                                              data->white_color, buffer);
+    int text_h, text_w;
+    SDL_QueryTexture(debug_text, NULL, NULL, &text_w, &text_h);
+
+    SDL_Rect text_rect = {.x = TEXT_PADDING, .y = TEXT_PADDING,
+                          .w = text_w, .h = text_h};
+
+    SDL_Rect bg_rect = {.x = text_rect.x - 1 * TEXT_PADDING,
+                        .y = text_rect.y - 1 * TEXT_PADDING,
+                        .h = text_rect.h + 2 * TEXT_PADDING,
+                        .w = text_rect.w + 2 * TEXT_PADDING};
+
+    SDL_SetRenderDrawColor(data->renderer, 0x33, 0x33, 0x33, 0xff);
+    SDL_RenderFillRect(data->renderer, &bg_rect);
+    SDL_RenderCopy(data->renderer, debug_text, NULL, &text_rect);
+
+    SDL_DestroyTexture(debug_text);
+}
+
 void draw_canvas_to_framebuffer(DrawData* data) {
     // Detach the canvas;
     SDL_SetRenderTarget(data->renderer, NULL);
     SDL_SetRenderDrawColor(data->renderer, 0x00, 0x00, 0x00, 0xff);
     SDL_RenderClear(data->renderer);
-
-    char buffer[256];
-    sprintf(buffer, "FPS: %.2f", 1.0 / data->dt);
-    draw_text(data->renderer, data->clear_sans, data->white_color, buffer,
-              0, 0, 0, 0, ALIGN_LEFT);
 
     SDL_Rect dest_rect;
     SDL_Rect origin_rect;

@@ -439,11 +439,15 @@ int main(int args_count, char** args_values) {
 
             } else if(e.type == SDL_KEYDOWN) {
                 switch (e.key.keysym.sym) {
+                case SDLK_ESCAPE:
                 case SDLK_q:
                     is_running = false;
                     break;
                 case SDLK_z:
                     dd.zoomed_in = !dd.zoomed_in;
+                    break;
+                case SDLK_p:
+                    dd.display_debug_info = !dd.display_debug_info;
                     break;
                 case SDLK_w:
                     move_point(&dd.zoom_origin, 0, -1 * PAN_INCREMENT,
@@ -528,6 +532,7 @@ int main(int args_count, char** args_values) {
             }
         }
 
+
         prepare_canvas(&dd);
         draw_grid(&dd);
         draw_numbers(&dd);
@@ -539,6 +544,11 @@ int main(int args_count, char** args_values) {
         if(dd.is_selecting_outside_ic) {
             draw_outside_ics_list(&dd, ic_list, dd.outside_ic_selected);
         }
+
+        if(dd.display_debug_info) {
+            draw_debug_info(&dd);
+        }
+
         draw_outside_ics_count(&dd, ic_list);
 
         swap_buffers(&dd);
